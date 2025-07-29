@@ -5,7 +5,7 @@ Defines the core data structures for capturing AI agent execution workflows.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -17,10 +17,9 @@ class ExecutionStep(BaseModel):
     step_number: int = Field(
         ..., ge=1, description="Sequential step number starting from 1"
     )
-    action: str = Field(
+    action: Literal["analyze", "implement", "test", "debug"] = Field(
         ...,
-        min_length=1,
-        description="Type of action: analyze, implement, test, debug, etc.",
+        description="Type of action. Allowed: analyze, implement, test, debug.",
     )
     content: str = Field(..., min_length=1, description="What was done in this step")
 
@@ -30,6 +29,7 @@ class ExecutionStep(BaseModel):
         default=None, description="Error encountered if step failed"
     )
 
+    # model_config: used by Pydantic for schema examples and docs (e.g., FastAPI)
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -62,7 +62,7 @@ class TraceContext(BaseModel):
 
     # Rich context - populated by MCP/environment when available
     environment: Optional[Dict[str, Any]] = Field(
-        None,
+        default=None,
         description="Environment context (git, dependencies, etc.) - populated by tooling",
     )
 
@@ -74,8 +74,9 @@ class TraceContext(BaseModel):
         for tag in v:
             if isinstance(tag, str) and tag.strip():
                 cleaned_tags.append(tag.strip().lower())
-        return list(set(cleaned_tags))  # Remove duplicates
+        return sorted(list(set(cleaned_tags)))  # Remove duplicates
 
+    # model_config: used by Pydantic for schema examples and docs (e.g., FastAPI)
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -115,7 +116,7 @@ class ExecutionTrace(BaseModel):
 
     # Context and metadata
     context: TraceContext = Field(
-        default_factory=TraceContext, description="Contextual information"
+        default_factory=lambda: TraceContext(), description="Contextual information"
     )
     success: bool = Field(
         True, description="Whether the overall execution was successful"
@@ -125,9 +126,21 @@ class ExecutionTrace(BaseModel):
     domain: Optional[str] = Field(
         None, description="Problem domain: python, web-dev, debugging, etc."
     )
-    complexity: Optional[str] = Field(
+    complexity: Optional[Literal["simple", "moderate", "complex"]] = Field(
         None, description="Complexity level: simple, moderate, complex"
     )
+
+    @classmethod
+    def from_user_input(cls, data: dict) -> "ExecutionTrace":
+        """
+        Create an ExecutionTrace from user input, stripping system fields from context.
+        """
+        data = dict(data)
+        if "context" in data and isinstance(data["context"], dict):
+            data["context"] = dict(data["context"])
+            data["context"].pop("timestamp", None)
+            data["context"].pop("trace_id", None)
+        return cls.model_validate(data)
 
     @field_validator("execution_steps")
     @classmethod
@@ -153,20 +166,6 @@ class ExecutionTrace(BaseModel):
             return v.strip().lower() if v.strip() else None
         return v
 
-    @field_validator("complexity")
-    @classmethod
-    def validate_complexity(cls, v: Optional[str]) -> Optional[str]:
-        """Ensure complexity is one of allowed values."""
-        if v is not None:
-            allowed_values = {"simple", "moderate", "complex"}
-            normalized = v.strip().lower()
-            if normalized not in allowed_values:
-                raise ValueError(
-                    f"Complexity must be one of {allowed_values}, got '{v}'"
-                )
-            return normalized
-        return v
-
     @classmethod
     def model_validate_with_migration(cls, data: Dict[str, Any]) -> "ExecutionTrace":
         """
@@ -184,6 +183,13 @@ class ExecutionTrace(BaseModel):
         if is_migration_needed(data):
             data = migrate_trace(data)
 
+        # Set a flag so the validator knows this is a load, not a user creation
+        data = dict(data)
+        # If context is a dict, propagate the flag for TraceContext
+        if "context" in data and isinstance(data["context"], dict):
+            data["context"] = dict(data["context"])
+            data["context"]["_from_storage"] = True
+        data["_from_storage"] = True
         return cls.model_validate(data)
 
     def to_searchable_text(self) -> str:
@@ -207,6 +213,7 @@ class ExecutionTrace(BaseModel):
         """Get the schema version of this trace."""
         return self.schema_version
 
+    # model_config: used by Pydantic for schema examples and docs (e.g., FastAPI)
     model_config = {
         "json_schema_extra": {
             "example": {

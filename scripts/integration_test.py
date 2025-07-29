@@ -26,25 +26,25 @@ def create_development_traces():
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="configure",
+                    action="implement",
                     content="Updated pyproject.toml with version 0.0.1 and core dependencies: pydantic, pydantic-settings, loguru, pytest, pytest-cov",
                     success=True,
                 ),
                 ExecutionStep(
                     step_number=2,
-                    action="command",
+                    action="implement",
                     content="uv add pydantic pydantic-settings loguru && uv add --dev pytest pytest-cov",
                     success=True,
                 ),
                 ExecutionStep(
                     step_number=3,
-                    action="create_structure",
+                    action="implement",
                     content="Created palimpsest/{models,storage,search,api} directories with __init__.py files",
                     success=True,
                 ),
                 ExecutionStep(
                     step_number=4,
-                    action="validate",
+                    action="test",
                     content="Tested package import: python -c 'import palimpsest; print(palimpsest.__version__)'",
                     success=True,
                 ),
@@ -63,13 +63,13 @@ def create_development_traces():
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="design",
+                    action="analyze",
                     content="Designed ExecutionStep model with step_number, action, content, timestamp, duration_ms, success, error_message fields",
                     success=True,
                 ),
                 ExecutionStep(
                     step_number=2,
-                    action="design",
+                    action="analyze",
                     content="Designed TraceContext model with git context, AI agent context, tags, and flexible metadata dictionary",
                     success=True,
                 ),
@@ -81,7 +81,7 @@ def create_development_traces():
                 ),
                 ExecutionStep(
                     step_number=4,
-                    action="validate",
+                    action="test",
                     content="Added field validators for step sequence validation, tag normalization, and complexity constraints",
                     success=True,
                 ),
@@ -185,7 +185,7 @@ def create_development_traces():
                 ),
                 ExecutionStep(
                     step_number=6,
-                    action="validate",
+                    action="test",
                     content="Tested real usage scenarios with temp directory, verified JSON output is human-readable",
                     success=True,
                 ),
@@ -319,7 +319,7 @@ def test_migration_compatibility():
             },
             {
                 "step_number": 2,
-                "action": "realize",
+                "action": "analyze",
                 "content": "Realized we need schema versioning for long-term compatibility",
             },
         ],
@@ -371,13 +371,13 @@ def test_performance_simulation():
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="generate",
+                    action="implement",
                     content=f"Generated test trace {i + 1} with realistic content length and structure",
                     success=True,
                 ),
                 ExecutionStep(
                     step_number=2,
-                    action="validate",
+                    action="test",
                     content="Validated trace structure and content meets requirements",
                     success=True,
                 ),
@@ -407,7 +407,8 @@ def test_performance_simulation():
 
     for trace_id in trace_ids:
         start_time = time.time()
-        loaded_trace = fm.load_trace(trace_id)
+        # We need to load the trace to measure performance but don't use the result
+        _ = fm.load_trace(trace_id)  # Using _ to indicate unused variable
         load_time = (time.time() - start_time) * 1000
         total_load_time += load_time
 
@@ -437,10 +438,10 @@ def main():
     trace_ids, traces = test_full_workflow()
 
     # Test 2: JSON readability
-    json_trace_id = test_json_readability()
+    test_json_readability()  # We don't need the return value
 
     # Test 3: Migration compatibility
-    legacy_trace_id = test_migration_compatibility()
+    test_migration_compatibility()  # We don't need the return value
 
     # Test 4: Performance simulation
     perf_trace_ids = test_performance_simulation()

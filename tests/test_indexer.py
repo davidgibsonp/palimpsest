@@ -37,12 +37,12 @@ def sample_traces():
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="setup",
+                    action="implement",
                     content="Initialize Python project structure with pyproject.toml",
                 ),
                 ExecutionStep(
                     step_number=2,
-                    action="install",
+                    action="implement",
                     content="Add pydantic and loguru dependencies via uv add",
                 ),
             ],
@@ -60,21 +60,24 @@ def sample_traces():
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="profile",
+                    action="analyze",
                     content="Run performance profiler to identify slow functions",
+                    success=True,
                 ),
                 ExecutionStep(
                     step_number=2,
-                    action="optimize",
+                    action="implement",
                     content="Replace json.dumps with faster orjson library",
+                    success=True,
                 ),
                 ExecutionStep(
                     step_number=3,
                     action="test",
                     content="Verify performance improvement with benchmarks",
+                    success=True,
                 ),
             ],
-            domain="performance",
+            domain="backend",
             complexity="moderate",
             success=True,
         )
@@ -88,12 +91,13 @@ def sample_traces():
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="create",
+                    action="implement",
                     content="Write Alembic migration script for new columns",
+                    success=True,
                 ),
                 ExecutionStep(
                     step_number=2,
-                    action="run",
+                    action="implement",
                     content="Execute migration against staging database",
                     success=False,
                     error_message="FOREIGN KEY constraint failed on users table",
@@ -156,7 +160,7 @@ def test_index_multiple_traces(indexer, sample_traces):
     assert stats["successful_traces"] == 2
     assert stats["failed_traces"] == 1
     assert "python" in stats["domains"]
-    assert "performance" in stats["domains"]
+    assert "backend" in stats["domains"]
     assert "database" in stats["domains"]
 
 
@@ -350,10 +354,14 @@ def test_concurrent_indexing(indexer):
                 execution_steps=[
                     ExecutionStep(
                         step_number=1,
-                        action="concurrent",
+                        action="implement",
                         content=f"thread {i} content",
+                        success=True,
                     )
                 ],
+                domain="testing",
+                complexity="simple",
+                success=True,
             )
             indexer.index_trace(trace)
             traces.append(trace.context.trace_id)
@@ -395,12 +403,14 @@ def test_performance_with_many_traces(indexer):
             execution_steps=[
                 ExecutionStep(
                     step_number=1,
-                    action="performance",
+                    action="analyze",
                     content=f"Performance test content for trace {i}",
+                    success=True,
                 )
             ],
             domain="testing",
             complexity="simple",
+            success=True,
         )
         indexer.index_trace(trace)
 

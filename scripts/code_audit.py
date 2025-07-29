@@ -273,6 +273,11 @@ def main():
             "Consider if all classes are necessary - might be over-engineered"
         )
 
+    if total_functions > 50:
+        recommendations.append(
+            "High number of functions - consider if some can be consolidated"
+        )
+
     if total_lines > 2000:
         recommendations.append(
             "Codebase is getting large - consider modularization strategies"

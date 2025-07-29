@@ -30,7 +30,7 @@ def detect_schema_version(trace_data: dict) -> str:
     return "0.0.1"
 
 
-def migrate_trace(trace_data: dict, target_version: str = None) -> dict:
+def migrate_trace(trace_data: dict, target_version: str | None = None) -> dict:
     """
     Migrate trace data to target version (defaults to current).
 
@@ -68,7 +68,7 @@ def migrate_trace(trace_data: dict, target_version: str = None) -> dict:
     )
 
 
-def is_migration_needed(trace_data: dict, target_version: str = None) -> bool:
+def is_migration_needed(trace_data: dict, target_version: str | None = None) -> bool:
     """
     Check if trace data needs migration to target version.
 
@@ -94,6 +94,7 @@ def _migrate_0_0_1_to_0_1_0(trace_data: dict) -> dict:
     - Adds schema_version field
     - Ensures context exists with required fields
     - Adds success field default
+    - Maps action values to allowed values (analyze, implement, test, debug)
     """
     migrated = trace_data.copy()
 
