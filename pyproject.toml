@@ -1,8 +1,19 @@
 [project]
 name = "palimpsest"
-version = "0.1.0"
+version = "0.0.1"
 description = "Preserve your AI development workflows. Their model, your code, your work."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "loguru>=0.7.3",
+    "packaging>=25.0",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+]
 
