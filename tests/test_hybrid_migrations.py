@@ -2,8 +2,6 @@
 Tests for the hybrid migration approach.
 """
 
-import pytest
-
 from palimpsest.models.migrations import (
     SCHEMA_SNAPSHOTS,
     get_schema_snapshot,
@@ -55,7 +53,6 @@ def test_schema_snapshot_not_required_for_simple_migrations():
 
 def test_versioned_directory_structure():
     """Test that the versions directory exists and is properly structured."""
-    import os
     from pathlib import Path
 
     # Get the path to the models directory
