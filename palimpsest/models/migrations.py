@@ -113,11 +113,11 @@ def _migrate_0_0_1_to_0_1_0(trace_data: dict) -> dict:
         context["timestamp"] = "2025-01-01T00:00:00Z"
     if "tags" not in context:
         context["tags"] = []
-    if "metadata" not in context:
-        context["metadata"] = {}
+    if "environment" not in context:
+        context["environment"] = {}
 
     # Mark as migrated
-    context["metadata"]["migrated_from"] = "0.0.1"
+    context["environment"]["migrated_from"] = "0.0.1"
 
     # Ensure success field exists
     if "success" not in migrated:

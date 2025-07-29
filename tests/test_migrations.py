@@ -62,7 +62,7 @@ def test_migration_from_0_0_1_to_0_1_0():
     assert "context" in migrated
     assert "trace_id" in migrated["context"]
     assert "timestamp" in migrated["context"]
-    assert migrated["context"]["metadata"]["migrated_from"] == "0.0.1"
+    assert migrated["context"]["environment"]["migrated_from"] == "0.0.1"
 
     # Check that success field was added
     assert migrated["success"] is True
@@ -110,7 +110,7 @@ def test_model_validate_with_migration():
 
     assert trace.schema_version == CURRENT_SCHEMA_VERSION
     assert trace.problem_statement == legacy_data["problem_statement"]
-    assert trace.context.metadata["migrated_from"] == "0.0.1"
+    assert trace.context.environment["migrated_from"] == "0.0.1"
     assert trace.success is True
 
 

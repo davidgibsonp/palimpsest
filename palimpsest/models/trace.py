@@ -12,36 +12,30 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class ExecutionStep(BaseModel):
-    """A single step in an execution trace."""
+    """A single step in an execution trace - LLM-capturable content only."""
 
     step_number: int = Field(
         ..., ge=1, description="Sequential step number starting from 1"
     )
     action: str = Field(
-        ..., min_length=1, description="Type of action: command, code, analysis, etc."
+        ...,
+        min_length=1,
+        description="Type of action: analyze, implement, test, debug, etc.",
     )
-    content: str = Field(
-        ..., min_length=1, description="The actual content of the step"
-    )
-    timestamp: datetime = Field(
-        default_factory=datetime.now, description="When this step was executed"
-    )
-    duration_ms: Optional[int] = Field(
-        None, ge=0, description="Duration in milliseconds"
-    )
-    success: bool = Field(True, description="Whether this step completed successfully")
+    content: str = Field(..., min_length=1, description="What was done in this step")
+
+    # Optional fields that LLM can sometimes provide
+    success: bool = Field(True, description="Whether this step was successful")
     error_message: Optional[str] = Field(
-        None, description="Error message if step failed"
+        default=None, description="Error encountered if step failed"
     )
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "step_number": 1,
-                "action": "command",
-                "content": "uv add pydantic",
-                "timestamp": "2025-01-29T10:30:00Z",
-                "duration_ms": 1250,
+                "action": "analyze",
+                "content": "Identified timeout issue in database connection pool",
                 "success": True,
                 "error_message": None,
             }
@@ -52,7 +46,7 @@ class ExecutionStep(BaseModel):
 class TraceContext(BaseModel):
     """Context information for an execution trace."""
 
-    # Core context (always present)
+    # Always present - system generated
     timestamp: datetime = Field(
         default_factory=datetime.now, description="When trace was created"
     )
@@ -60,26 +54,16 @@ class TraceContext(BaseModel):
         default_factory=lambda: str(uuid4()), description="Unique trace identifier"
     )
 
-    # Development context (when available)
-    git_branch: Optional[str] = Field(None, description="Git branch name")
-    git_commit: Optional[str] = Field(None, description="Git commit hash")
-    working_directory: Optional[str] = Field(None, description="Working directory path")
-    environment: Optional[Dict[str, Any]] = Field(
-        None, description="Environment variables and settings"
-    )
-
-    # AI agent context
-    model_name: Optional[str] = Field(
-        None, description="AI model used (e.g., claude-3-sonnet)"
-    )
-    agent_version: Optional[str] = Field(None, description="Agent/tool version")
-
-    # Flexible additional context
+    # LLM-provided tags for organization
     tags: List[str] = Field(
-        default_factory=list, description="Categorical tags for organization"
+        default_factory=list,
+        description="Categorical tags (e.g., ['bug-fix', 'python', 'async'])",
     )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional flexible metadata"
+
+    # Rich context - populated by MCP/environment when available
+    environment: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Environment context (git, dependencies, etc.) - populated by tooling",
     )
 
     @field_validator("tags")
@@ -97,14 +81,13 @@ class TraceContext(BaseModel):
             "example": {
                 "timestamp": "2025-01-29T10:30:00Z",
                 "trace_id": "123e4567-e89b-12d3-a456-426614174000",
-                "git_branch": "feature/pydantic-models",
-                "git_commit": "abc123def456",
-                "working_directory": "/home/user/project",
-                "model_name": "claude-3-sonnet",
-                "tags": ["python", "setup", "dependencies"],
-                "metadata": {
-                    "session_id": "sess_123",
-                    "user_intent": "add_dependencies",
+                "tags": ["bug-fix", "python", "async"],
+                "environment": {
+                    "python_version": "3.11.2",
+                    "git_branch": "feature/async-fix",
+                    "git_commit": "abc123",
+                    "dependencies": ["fastapi==0.104.1"],
+                    "modified_files": ["app/main.py"],
                 },
             }
         }
@@ -116,7 +99,7 @@ class ExecutionTrace(BaseModel):
 
     # Schema version for migration support
     schema_version: str = Field(
-        "0.1.0", description="Schema version used to create this trace"
+        default="0.1.0", description="Schema version used to create this trace"
     )
 
     # Required core fields
@@ -228,24 +211,31 @@ class ExecutionTrace(BaseModel):
         "json_schema_extra": {
             "example": {
                 "schema_version": "0.1.0",
-                "problem_statement": "Add Pydantic dependencies to the palimpsest project for data validation",
-                "outcome": "Successfully added pydantic, pydantic-settings, and loguru dependencies via uv",
+                "problem_statement": "Fix async timeout in API endpoint causing 504 errors",
+                "outcome": "Increased connection timeout and added retry logic, reducing 504 errors by 95%",
                 "execution_steps": [
                     {
                         "step_number": 1,
-                        "action": "command",
-                        "content": "cd /path/to/project && uv add pydantic pydantic-settings loguru",
-                        "timestamp": "2025-01-29T10:30:00Z",
-                        "duration_ms": 1250,
+                        "action": "analyze",
+                        "content": "Found database queries timing out after 30 seconds under load",
                         "success": True,
-                    }
+                    },
+                    {
+                        "step_number": 2,
+                        "action": "implement",
+                        "content": "Increased connection timeout to 60s and added connection pooling",
+                        "success": True,
+                    },
                 ],
                 "success": True,
-                "domain": "python",
-                "complexity": "simple",
+                "domain": "backend",
+                "complexity": "moderate",
                 "context": {
-                    "git_branch": "feature/dependencies",
-                    "tags": ["setup", "dependencies", "python"],
+                    "tags": ["bug-fix", "performance", "async"],
+                    "environment": {
+                        "python_version": "3.11.2",
+                        "git_branch": "fix/async-timeout",
+                    },
                 },
             }
         }

@@ -192,7 +192,7 @@ def test_migration_on_load(file_manager, temp_dir):
     # Should be migrated to current version
     assert loaded_trace.schema_version == "0.1.0"
     assert loaded_trace.problem_statement == legacy_data["problem_statement"]
-    assert loaded_trace.context.metadata["migrated_from"] == "0.0.1"
+    assert loaded_trace.context.environment["migrated_from"] == "0.0.1"
 
 
 def test_concurrent_operations(file_manager):
