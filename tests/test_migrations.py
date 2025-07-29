@@ -1,5 +1,5 @@
 """
-Tests for the migration framework.
+Tests for the simplified migration framework.
 """
 
 import pytest
@@ -114,8 +114,21 @@ def test_model_validate_with_migration():
     assert trace.success is True
 
 
-def test_invalid_migration_path():
-    """Test error handling for invalid migration paths."""
+def test_unsupported_migration_target():
+    """Test error handling for unsupported migration targets."""
+    trace_data = {
+        "schema_version": "0.1.0",
+        "problem_statement": "Test problem",
+        "outcome": "Should fail",
+        "execution_steps": [{"step_number": 1, "action": "test", "content": "test"}],
+    }
+
+    with pytest.raises(ValidationError, match="Only migration to 0.1.0 is supported"):
+        migrate_trace(trace_data, "0.2.0")
+
+
+def test_unsupported_source_version():
+    """Test error handling for unsupported source versions."""
     trace_data = {
         "schema_version": "99.0.0",  # Nonexistent version
         "problem_statement": "Test problem",
@@ -123,7 +136,7 @@ def test_invalid_migration_path():
         "execution_steps": [{"step_number": 1, "action": "test", "content": "test"}],
     }
 
-    with pytest.raises(ValidationError, match="No migration path found"):
+    with pytest.raises(ValidationError, match="No migration path from 99.0.0 to 0.1.0"):
         migrate_trace(trace_data, "0.1.0")
 
 
