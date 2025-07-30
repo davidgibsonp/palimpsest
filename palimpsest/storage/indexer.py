@@ -16,7 +16,7 @@ Key features:
 
 import sqlite3
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from loguru import logger
 
@@ -151,7 +151,7 @@ class TraceIndexer:
         self, conn: sqlite3.Connection, trace: ExecutionTrace
     ) -> None:
         """Insert or update trace metadata in the main traces table."""
-        tags_text = " ".join(trace.context.tags) if trace.context.tags else ""
+        tags_text = ",".join(trace.context.tags) if trace.context.tags else ""
 
         conn.execute(
             """
@@ -178,7 +178,7 @@ class TraceIndexer:
     ) -> None:
         """Insert or update trace content in the FTS5 table."""
         execution_steps_content = self._extract_steps_content(trace)
-        tags_text = " ".join(trace.context.tags) if trace.context.tags else ""
+        tags_text = ",".join(trace.context.tags) if trace.context.tags else ""
 
         conn.execute(
             """
@@ -228,8 +228,8 @@ class TraceIndexer:
         except Exception as e:
             raise IndexError(f"Failed to remove trace {trace_id}: {e}")
 
-    def search_traces(
-        self, query: str, filters: Optional[Dict[str, any]] = None, limit: int = 50
+    def search(
+        self, query: str, filters: Optional[Dict[str, Any]] = None, limit: int = 50
     ) -> List[str]:
         """
         Search for traces matching the query.
@@ -264,8 +264,32 @@ class TraceIndexer:
     def _build_search_query(self, query: str) -> tuple[str, List[str]]:
         """Build the base search query and parameters."""
         if query.strip():
-            # Build FTS5 query with proper escaping
-            fts_query = self._build_fts_query(query.strip())
+            # Check if the query targets a specific field using field:term syntax
+            if ":" in query and not query.startswith('"'):
+                parts = query.split(":", 1)
+                field = parts[0].strip().lower()
+                search_term = parts[1].strip()
+
+                # Handle known field names
+                if field in ["problem", "problem_statement"]:
+                    fts_query = (
+                        f"problem_statement:{self._build_fts_query(search_term)}"
+                    )
+                elif field in ["outcome", "result"]:
+                    fts_query = f"outcome:{self._build_fts_query(search_term)}"
+                elif field in ["step", "steps", "execution"]:
+                    fts_query = (
+                        f"execution_steps_content:{self._build_fts_query(search_term)}"
+                    )
+                elif field in ["tag", "tags"]:
+                    fts_query = f"tags:{self._build_fts_query(search_term)}"
+                else:
+                    # Unknown field, search everywhere
+                    fts_query = self._build_fts_query(query)
+            else:
+                # No field specified, search everywhere
+                fts_query = self._build_fts_query(query.strip())
+
             base_query = """
                 SELECT traces.trace_id, bm25(traces_fts) as rank
                 FROM traces_fts
@@ -299,11 +323,11 @@ class TraceIndexer:
         if len(escaped_words) == 1:
             return escaped_words[0]
         else:
-            return " OR ".join(escaped_words)
+            return " AND ".join(escaped_words)
 
     def _apply_search_filters(
-        self, base_query: str, params: List[str], filters: Optional[Dict[str, any]]
-    ) -> tuple[str, List[str]]:
+        self, base_query: str, params: List[Any], filters: Optional[Dict[str, Any]]
+    ) -> tuple[str, List[Any]]:
         """Apply filters to the search query."""
         if not filters:
             return base_query, params
@@ -347,13 +371,128 @@ class TraceIndexer:
             return base_query + " ORDER BY traces.timestamp DESC LIMIT ?"
 
     def _execute_search(
-        self, conn: sqlite3.Connection, query: str, params: List[str]
+        self, conn: sqlite3.Connection, query: str, params: List[Any]
     ) -> List[str]:
         """Execute the search query and return trace IDs."""
         cursor = conn.execute(query, params)
         return [row[0] for row in cursor.fetchall()]
 
-    def get_trace_metadata(self, trace_id: str) -> Optional[Dict[str, any]]:
+    def search_metadata(
+        self, query: str, filters: Optional[Dict[str, Any]] = None, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for traces and return metadata without full trace content.
+
+        This method is more efficient for UI displays when full trace content
+        is not immediately needed.
+
+        Args:
+            query: Search query string
+            filters: Optional filters (domain, complexity, success, tags)
+            limit: Maximum number of results
+
+        Returns:
+            List of metadata dictionaries with trace_id, problem_statement, etc.
+        """
+        try:
+            # First get matching trace IDs
+            trace_ids = self.search(query, filters, limit)
+
+            # Then fetch metadata for those traces
+            results = []
+            with sqlite3.connect(self.db_path) as conn:
+                for trace_id in trace_ids:
+                    metadata = self._get_trace_metadata(conn, trace_id)
+                    if metadata:
+                        results.append(metadata)
+
+            return results
+
+        except Exception as e:
+            raise IndexError(f"Metadata search failed: {e}")
+
+    def _get_trace_metadata(
+        self, conn: sqlite3.Connection, trace_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Get metadata for a trace without full content."""
+        cursor = conn.execute(
+            """
+            SELECT trace_id, problem_statement, outcome, domain, complexity, 
+                   success, timestamp, tags
+            FROM traces
+            WHERE trace_id = ?
+            """,
+            (trace_id,),
+        )
+
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        return {
+            "trace_id": row[0],
+            "problem_statement": row[1],
+            "outcome": row[2],
+            "domain": row[3],
+            "complexity": row[4],
+            "success": bool(row[5]),
+            "timestamp": row[6],
+            "tags": row[7].split(",") if row[7] else [],
+        }
+
+    def get_common_tags(self, limit: int = 10) -> List[Tuple[str, int]]:
+        """
+        Get the most common tags in the index.
+
+        Args:
+            limit: Maximum number of tags to return
+
+        Returns:
+            List of (tag, count) tuples
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # SQL to split comma-separated tags into individual tags and count them
+                cursor = conn.execute(
+                    """
+                    WITH split_tags AS (
+                        SELECT trim(value) as tag
+                        FROM traces, json_each('["' || replace(tags, ',', '","') || '"]')
+                        WHERE tags IS NOT NULL AND tags != ''
+                    )
+                    SELECT tag, COUNT(*) as count 
+                    FROM split_tags 
+                    GROUP BY tag 
+                    ORDER BY count DESC 
+                    LIMIT ?
+                    """,
+                    (limit,),
+                )
+
+                return [(row[0], row[1]) for row in cursor.fetchall()]
+
+        except Exception as e:
+            logger.warning(f"Failed to get common tags: {e}")
+            return []  # Return empty list instead of raising exception
+
+    def clear_index(self) -> None:
+        """
+        Clear the entire search index.
+
+        This is useful before rebuilding the index.
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM traces")
+                conn.execute("DELETE FROM traces_fts")
+                conn.commit()
+
+            logger.info("Cleared search index")
+
+        except Exception as e:
+            raise IndexError(f"Failed to clear index: {e}")
+
+    def get_trace_metadata(self, trace_id: str) -> Optional[Dict[str, Any]]:
         """
         Get metadata for a specific trace without loading full content.
 
@@ -387,7 +526,7 @@ class TraceIndexer:
         except Exception as e:
             raise IndexError(f"Failed to get metadata for {trace_id}: {e}")
 
-    def get_stats(self) -> Dict[str, any]:
+    def get_stats(self) -> Dict[str, Any]:
         """
         Get database statistics.
 

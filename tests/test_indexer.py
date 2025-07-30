@@ -136,7 +136,7 @@ def test_index_single_trace(indexer, sample_traces):
     indexer.index_trace(trace)
 
     # Should be able to find it
-    results = indexer.search_traces("Python project")
+    results = indexer.search("Python project")
     assert trace_id in results
 
     # Metadata should be available
@@ -171,19 +171,19 @@ def test_full_text_search(indexer, sample_traces):
         indexer.index_trace(trace)
 
     # Search for Python-related traces
-    results = indexer.search_traces("Python dependencies")
+    results = indexer.search("Python dependencies")
     assert len(results) >= 1
 
     # Search for performance-related traces
-    results = indexer.search_traces("performance bottleneck")
+    results = indexer.search("performance bottleneck")
     assert len(results) >= 1
 
     # Search for database-related traces
-    results = indexer.search_traces("database migration")
+    results = indexer.search("database migration")
     assert len(results) >= 1
 
     # Search for non-existent content
-    results = indexer.search_traces("nonexistent content")
+    results = indexer.search("nonexistent content")
     assert len(results) == 0
 
 
@@ -194,19 +194,19 @@ def test_filtered_search(indexer, sample_traces):
         indexer.index_trace(trace)
 
     # Filter by domain
-    results = indexer.search_traces("", filters={"domain": "python"})
+    results = indexer.search("", filters={"domain": "python"})
     assert len(results) == 1
 
     # Filter by complexity
-    results = indexer.search_traces("", filters={"complexity": "moderate"})
+    results = indexer.search("", filters={"complexity": "moderate"})
     assert len(results) == 1
 
     # Filter by success
-    results = indexer.search_traces("", filters={"success": False})
+    results = indexer.search("", filters={"success": False})
     assert len(results) == 1
 
     # Combined filters
-    results = indexer.search_traces("", filters={"domain": "python", "success": True})
+    results = indexer.search("", filters={"domain": "python", "success": True})
     assert len(results) == 1
 
 
@@ -217,11 +217,11 @@ def test_search_with_limit(indexer, sample_traces):
         indexer.index_trace(trace)
 
     # Search with limit
-    results = indexer.search_traces("", limit=2)
+    results = indexer.search("", limit=2)
     assert len(results) <= 2
 
     # Search with higher limit
-    results = indexer.search_traces("", limit=10)
+    results = indexer.search("", limit=10)
     assert len(results) == 3  # Only 3 traces total
 
 
@@ -232,7 +232,7 @@ def test_empty_search_returns_recent(indexer, sample_traces):
         indexer.index_trace(trace)
 
     # Empty search should return all traces ordered by timestamp
-    results = indexer.search_traces("")
+    results = indexer.search("")
     assert len(results) == 3
 
     # Results should be ordered (most recent first)
@@ -246,14 +246,14 @@ def test_remove_trace(indexer, sample_traces):
 
     # Index and verify it exists
     indexer.index_trace(trace)
-    results = indexer.search_traces("Python")
+    results = indexer.search("Python")
     assert trace_id in results
 
     # Remove trace
     indexer.remove_trace(trace_id)
 
     # Should no longer be found
-    results = indexer.search_traces("Python")
+    results = indexer.search("Python")
     assert trace_id not in results
 
     # Metadata should be None
@@ -278,7 +278,7 @@ def test_update_existing_trace(indexer, sample_traces):
     indexer.index_trace(trace)
 
     # Should find updated content
-    results = indexer.search_traces("Updated Python")
+    results = indexer.search("Updated Python")
     assert trace_id in results
 
     # Metadata should be updated
@@ -297,13 +297,13 @@ def test_search_execution_steps_content(indexer, sample_traces):
         indexer.index_trace(trace)
 
     # Search for content that's only in execution steps
-    results = indexer.search_traces("pyproject.toml")
+    results = indexer.search("pyproject.toml")
     assert len(results) >= 1
 
-    results = indexer.search_traces("orjson library")
+    results = indexer.search("orjson library")
     assert len(results) >= 1
 
-    results = indexer.search_traces("Alembic migration")
+    results = indexer.search("Alembic migration")
     assert len(results) >= 1
 
 
@@ -314,7 +314,7 @@ def test_search_error_messages(indexer, sample_traces):
         indexer.index_trace(trace)
 
     # Search for error message content
-    results = indexer.search_traces("FOREIGN KEY constraint")
+    results = indexer.search("FOREIGN KEY constraint")
     assert len(results) >= 1
 
 
@@ -329,7 +329,7 @@ def test_rebuild_index(indexer, sample_traces):
     assert count == 3
 
     # Search should still work
-    results = indexer.search_traces("Python")
+    results = indexer.search("Python")
     assert len(results) >= 1
 
 
@@ -384,7 +384,7 @@ def test_concurrent_indexing(indexer):
     assert len(traces) == 5
 
     # Search should find all traces
-    results = indexer.search_traces("Concurrent")
+    results = indexer.search("Concurrent")
     assert len(results) == 5
 
 
@@ -421,7 +421,7 @@ def test_performance_with_many_traces(indexer):
 
     # Test search performance
     start_time = time.time()
-    results = indexer.search_traces("Performance test", limit=trace_count)
+    results = indexer.search("Performance test", limit=trace_count)
     search_time = time.time() - start_time
 
     print(f"Searched {trace_count} traces in {search_time * 1000:.1f}ms")
