@@ -174,7 +174,7 @@ def test_migration_on_load(file_manager, temp_dir):
         "problem_statement": "Legacy trace without version",
         "outcome": "Should be migrated on load",
         "execution_steps": [
-            {"step_number": 1, "action": "legacy", "content": "old format"}
+            {"step_number": 1, "action": "test", "content": "old format"}
         ],
     }
 

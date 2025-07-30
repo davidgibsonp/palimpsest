@@ -99,7 +99,7 @@ def test_model_validate_with_migration():
         "execution_steps": [
             {
                 "step_number": 1,
-                "action": "validate",
+                "action": "test",
                 "content": "legacy validation content",
             }
         ],
