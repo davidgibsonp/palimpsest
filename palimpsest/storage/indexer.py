@@ -85,7 +85,8 @@ class TraceIndexer:
 
     def _create_main_table(self, conn: sqlite3.Connection) -> None:
         """Create the main traces table for structured metadata."""
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS traces (
                 trace_id TEXT PRIMARY KEY,
                 problem_statement TEXT NOT NULL,
@@ -97,11 +98,13 @@ class TraceIndexer:
                 tags TEXT,
                 execution_steps_count INTEGER NOT NULL
             )
-        """)
+        """
+        )
 
     def _create_fts_table(self, conn: sqlite3.Connection) -> None:
         """Create FTS5 virtual table for full-text search."""
-        conn.execute("""
+        conn.execute(
+            """
             CREATE VIRTUAL TABLE IF NOT EXISTS traces_fts USING fts5(
                 trace_id UNINDEXED,
                 problem_statement,
@@ -109,7 +112,8 @@ class TraceIndexer:
                 execution_steps_content,
                 tags
             )
-        """)
+        """
+        )
 
     def _create_indexes(self, conn: sqlite3.Connection) -> None:
         """Create indexes for commonly queried fields."""
