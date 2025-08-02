@@ -209,3 +209,6 @@ __marimo__/
 # Palimpsest
 .palimpsest/traces/
 .palimpsest/index.db
+
+# macOS
+.DS_Store
