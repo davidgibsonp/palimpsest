@@ -13,28 +13,26 @@ from typing import Optional
 import click
 from loguru import logger
 
-from ..api.core import (
-    create_trace as api_create_trace,
-    get_stats as api_get_stats,
-    get_trace as api_get_trace,
-    list_traces as api_list_traces,
-    search_traces as api_search_traces,
-)
+from ..api.core import create_trace as api_create_trace
+from ..api.core import get_stats as api_get_stats
+from ..api.core import get_trace as api_get_trace
+from ..api.core import list_traces as api_list_traces
+from ..api.core import search_traces as api_search_traces
 from ..exceptions import PalimpsestError, ValidationError
 from ..mcp import run_server as mcp_run_server
 from .config import (
     CLIConfig,
+    create_default_config,
     load_config,
     save_config,
-    create_default_config,
     setup_completion,
 )
 from .utils import (
-    format_trace_summary,
     format_trace_details,
+    format_trace_summary,
     print_error,
-    print_success,
     print_info,
+    print_success,
 )
 
 

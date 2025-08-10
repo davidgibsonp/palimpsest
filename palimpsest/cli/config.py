@@ -5,10 +5,10 @@ Handles user preferences, settings, and configuration files.
 """
 
 import os
-import yaml
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import yaml
 from loguru import logger
 from pydantic import BaseModel, Field
 

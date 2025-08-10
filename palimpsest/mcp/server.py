@@ -11,13 +11,11 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 from mcp.server.fastmcp import FastMCP
 
-from ..api.core import (
-    create_trace as api_create_trace,
-    get_stats as api_get_stats,
-    get_trace as api_get_trace,
-    list_traces as api_list_traces,
-    search_traces as api_search_traces,
-)
+from ..api.core import create_trace as api_create_trace
+from ..api.core import get_stats as api_get_stats
+from ..api.core import get_trace as api_get_trace
+from ..api.core import list_traces as api_list_traces
+from ..api.core import search_traces as api_search_traces
 from ..exceptions import PalimpsestError, ValidationError
 
 
