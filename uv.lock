@@ -281,7 +281,7 @@ wheels = [
 [[package]]
 name = "palimpsest"
 version = "0.0.4"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "loguru" },
