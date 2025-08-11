@@ -107,7 +107,7 @@ def test_create_multiple_traces(temp_path, sample_trace):
     # Create all traces
     id1 = create_trace(trace1, auto_context=False, base_path=temp_path)
     id2 = create_trace(trace2, auto_context=False, base_path=temp_path)
-    id3 = create_trace(trace3, auto_context=False, base_path=temp_path)
+    _id3 = create_trace(trace3, auto_context=False, base_path=temp_path)
 
     # List all traces
     traces = list_traces(base_path=temp_path)

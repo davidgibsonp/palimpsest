@@ -1,19 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "palimpsest"
-version = "0.0.3"
+version = "0.0.4"
 description = "Preserve your AI development workflows. Their model, your code, your work."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "click>=8.0",
     "loguru>=0.7.3",
+    "mcp[cli]",
     "packaging>=25.0",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
+    "pyyaml>=6.0",
 ]
+
+[project.scripts]
+palimpsest = "palimpsest.cli.main:cli"
 
 [dependency-groups]
 dev = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
 ]
+
+[tool.uv]
+package = true
 
