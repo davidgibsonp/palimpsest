@@ -84,11 +84,15 @@ echo '{
 }' > trace_file.json
 ```
 
-### MCP Server for AI Agents (In Development)
+### MCP Server for AI Agents
 
 ```bash
 # Start MCP server for AI integration
 palimpsest server start
+
+# AI agents can now use 5 MCP tools:
+# - create_trace(), search_traces(), get_trace()
+# - list_traces(), get_stats()
 ```
 
 ## Features
@@ -98,6 +102,14 @@ palimpsest server start
 🤝 **Shareable** - Help others (when you want to)  
 🧠 **Smart** - AI assistants that actually remember and learn  
 ⚡ **Fast** - <1s response time for typical operations  
+🔌 **Dual Interface** - CLI for humans, MCP for AI agents  
+
+## Documentation
+
+- [Quick Start Guide](docs/quickstart.md) - Get up and running in minutes
+- [Interface Documentation](docs/interfaces.md) - CLI and MCP Server usage  
+- [API Reference](docs/api-reference.md) - Complete command and tool reference
+- [Architecture Overview](docs/architecture.md) - Technical implementation details
 
 ## Get Involved
 
