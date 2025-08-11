@@ -4,10 +4,10 @@
 
 **Their model. Your code. Your work.**
 
-[![Development Status](https://img.shields.io/badge/Status-Pre--Alpha-red)](https://github.com/damiangibson/meta-palimpsest)
+[![Development Status](https://img.shields.io/badge/Status-Pre--Alpha-red)](https://img.shields.io/badge/Status-Pre--Alpha-red)
 [![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-0.0.4-blue)](https://github.com/damiangibson/meta-palimpsest/releases)
+[![Version](https://img.shields.io/badge/Version-0.0.4-blue)](https://github.com/davidgibsonp/palimpsest/releases)
 
 </div>
 
@@ -32,11 +32,12 @@ Palimpsest captures the traces of your AI collaboration sessions. The breakthrou
 ## Get Started
 
 ```bash
-# Install with pip
-pip install palimpsest
+# Clone the repository
+git clone https://github.com/davidgibsonp/palimpsest.git
+cd palimpsest
 
-# Or use uv (recommended)
-uv pip install palimpsest
+# Install with uv
+uv sync
 ```
 
 ### CLI Usage
@@ -114,8 +115,7 @@ palimpsest server start
 ## Get Involved
 
 ⭐ **Star to follow progress**
-💬 **Questions? Ideas?** [Open an issue](https://github.com/damiangibson/meta-palimpsest/issues)
-🔧 **Want to contribute?** See our [contribution guidelines](https://github.com/damiangibson/meta-palimpsest/blob/main/CONTRIBUTING.md)
+💬 **Questions? Ideas?** [Open an issue](https://github.com/davidgibsonp/palimpsest/issues)
 
 ---
 
