@@ -1,5 +1,10 @@
 # Palimpsest
 
+> **⚠️ Development Status**: This project is undergoing a fundamental redesign based on learnings from initial development and user testing. A new approach is being developed that addresses core architectural limitations discovered during v0.0.x development.
+> 
+> This repository remains available for reference and learning purposes. Updates will be announced when the new direction is ready for public use.
+
+
 <div align="center">
 
 **Their model. Your code. Your work.**
